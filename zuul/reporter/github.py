@@ -17,7 +17,7 @@ import voluptuous as v
 import time
 
 from zuul.reporter import BaseReporter
-from zuul.exceptions import MergeFailure
+from zuul.exceptions import MergeFailure, HeadBranchModified
 
 
 class GithubReporter(BaseReporter):
@@ -54,11 +54,11 @@ class GithubReporter(BaseReporter):
             hasattr(item.change, 'patchset') and
             item.change.patchset is not None):
             self.setPullStatus(pipeline, item)
+        if self._labels:
+            self.setLabels(item)
         if (self._merge and
             hasattr(item.change, 'number')):
             self.mergePull(item)
-        if self._labels:
-            self.setLabels(item)
 
     def addPullComment(self, pipeline, item, message):
         if message is None:
@@ -106,6 +106,13 @@ class GithubReporter(BaseReporter):
             time.sleep(2)
             self.log.debug('Trying to merge change %s again...' % item.change)
             self.connection.mergePull(owner, project, pr_number, message, sha)
+        except HeadBranchModified:
+            self.log.debug('Head branch modified. Change %s not merged' %
+                           item.change)
+            bad_sha_msg = ('Error merging pull request:'
+                           ' Head branch was modified.')
+            self.connection.commentPull(owner, project, pr_number, bad_sha_msg)
+            raise
         item.change.is_merged = True
 
     def setLabels(self, item):

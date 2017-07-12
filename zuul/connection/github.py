@@ -21,10 +21,10 @@ import webob
 import webob.dec
 import voluptuous as v
 import github3
-from github3.exceptions import MethodNotAllowed
+from github3.exceptions import MethodNotAllowed, ClientError
 
 from zuul.connection import BaseConnection
-from zuul.exceptions import MergeFailure
+from zuul.exceptions import MergeFailure, HeadBranchModified
 from zuul.model import GithubTriggerEvent
 
 
@@ -322,6 +322,12 @@ class GithubConnection(BaseConnection):
         except MethodNotAllowed as e:
             raise MergeFailure('Merge was not successful due to mergeability'
                                ' conflict, original error is %s' % e)
+        except ClientError as e:
+            if e.code == 409:
+                raise HeadBranchModified('Error merging pull request:'
+                                         ' Head branch was updated.')
+            else:
+                raise
         log_rate_limit(self.log, self.github)
         if not result:
             raise Exception('Pull request was not merged')

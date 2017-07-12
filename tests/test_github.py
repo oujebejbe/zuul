@@ -303,10 +303,26 @@ class TestGithub(ZuulTestCase):
         # pipeline merges the pull request on success
         self.fake_github.merge_failure = True
         A = self.fake_github.openFakePullRequest('org/project', 'master', 'A')
-        self.fake_github.emitEvent(A.getCommentAddedEvent('merge me'))
+        self.fake_github.emitEvent(A.addLabel('merge'))
         self.waitUntilSettled()
+
         self.assertFalse(A.is_merged)
+        self.assertEqual([], A.labels)
         self.fake_github.merge_failure = False
+
+    def test_report_pull_head_changed(self):
+        # head branch was changed while the tests were running
+        self.fake_github.merge_head_changed = True
+        A = self.fake_github.openFakePullRequest('org/project', 'master', 'A')
+        self.fake_github.emitEvent(A.addLabel('merge'))
+        self.waitUntilSettled()
+
+        self.assertFalse(A.is_merged)
+        self.assertEqual([], A.labels)
+        self.assertEqual(1, len(A.comments))
+        self.assertEqual('Error merging pull request:'
+                         ' Head branch was modified.', A.comments[0])
+        self.fake_github.merge_head_changed = False
 
     def test_report_pull_merge_not_allowed_once(self):
         # pipeline merges the pull request on second run of merge

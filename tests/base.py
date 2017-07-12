@@ -62,7 +62,7 @@ import zuul.trigger.gerrit
 import zuul.trigger.github
 import zuul.trigger.timer
 import zuul.trigger.zuultrigger
-from zuul.exceptions import MergeFailure
+from zuul.exceptions import MergeFailure, HeadBranchModified
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__),
                            'fixtures')
@@ -694,6 +694,7 @@ class FakeGithubConnection(zuul.connection.github.GithubConnection):
         self.pull_requests = []
         self.upstream_root = upstream_root
         self.merge_failure = False
+        self.merge_head_changed = False
         self.merge_not_allowed_count = 0
 
     def openFakePullRequest(self, project, branch, subject, files=[]):
@@ -791,6 +792,9 @@ class FakeGithubConnection(zuul.connection.github.GithubConnection):
         pull_request = self.pull_requests[pr_number - 1]
         if self.merge_failure:
             raise Exception('Pull request was not merged')
+        elif self.merge_head_changed:
+            raise HeadBranchModified('Error merging pull request:'
+                                     ' Head branch was updated.')
         if self.merge_not_allowed_count > 0:
             self.merge_not_allowed_count -= 1
             raise MergeFailure('Merge was not successful due to mergeability'
