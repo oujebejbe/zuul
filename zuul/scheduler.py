@@ -508,6 +508,9 @@ class Scheduler(threading.Thread):
                     manager.event_filters += trigger.getEventFilters(
                         conf_pipeline['trigger'][trigger_name])
 
+            pipeline.report_empty = conf_pipeline.get('report-empty',
+                                                      False)
+
         for project_template in data.get('project-templates', []):
             # Make sure the template only contains valid pipelines
             tpl = dict(
@@ -1775,7 +1778,8 @@ class BasePipelineManager(object):
     def _reportItem(self, item):
         self.log.debug("Reporting change %s" % item.change)
         ret = True  # Means error as returned by trigger.report
-        if not self.pipeline.getJobs(item):
+        if not self.pipeline.getJobs(item) and \
+            not self.pipeline.report_empty:
             # We don't send empty reports with +1,
             # and the same for -1's (merge failures or transient errors)
             # as they cannot be followed by +1's

@@ -1982,6 +1982,29 @@ jobs:
 
         self.assertEqual(len(self.history), 0)
 
+    def test_no_job_project_report(self):
+        "Test that reports with no jobs does get sent when configured"
+        self.config.set('zuul', 'layout_config',
+                        'tests/fixtures/layout-no-job-report.yaml')
+        self.sched.reconfigure(self.config)
+        self.registerJobs()
+        A = self.fake_gerrit.addFakeChange('org/no-jobs-project',
+                                           'master', 'A')
+        self.fake_gerrit.addEvent(A.getPatchsetCreatedEvent(1))
+        self.waitUntilSettled()
+
+        # Change was reported to
+        self.assertEqual(A.reported, True)
+        self.assertEqual(len(A.messages), 1)
+        self.assertEqual('Build succeeded.\n\n', A.messages[0])
+
+        # Check queue is empty afterwards
+        check_pipeline = self.sched.layout.pipelines['check-always-report']
+        items = check_pipeline.getAllItems()
+        self.assertEqual(len(items), 0)
+
+        self.assertEqual(len(self.history), 0)
+
     def test_zuul_refs(self):
         "Test that zuul refs exist and have the right changes"
         self.worker.hold_jobs_in_build = True

@@ -1,0 +1,22 @@
+pipelines:
+  - name: check-always-report
+    manager: IndependentPipelineManager
+    report-empty: true
+    trigger:
+      gerrit:
+        - event: patchset-created
+    success:
+      gerrit:
+        verified: 1
+    failure:
+      gerrit:
+        verified: -1
+
+projects:
+  - name: org/no-jobs-project
+    check-always-report:
+      - never-run
+jobs:
+  - name: never-run
+    skip-if:
+      - project: '.*'

@@ -76,6 +76,7 @@ class LayoutSchema(object):
                 'window-decrease-type': window_type,
                 'window-decrease-factor': window_factor,
                 'github-status-name': str,
+                'report-empty': bool,
                 }
 
     project_template = {v.Required('name'): str}

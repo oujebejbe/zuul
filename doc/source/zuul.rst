@@ -596,6 +596,9 @@ explanation of each of the parameters::
   This is useful if a status with custom name needs to be reported
   back to Github.
   Default: name of the pipeline
+**report-empty**
+  This defines whether Zuul should report back success even if no jobs
+  were run.
 
 Some example pipeline configurations are included in the sample layout
 file.  The first is called a *check* pipeline::
