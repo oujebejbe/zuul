@@ -7,6 +7,7 @@ Zuul includes a simple command line client that may be used by
 administrators to affect Zuul's behavior while running.  It must be
 run on a host that has access to the Gearman server (e.g., locally on
 the Zuul host).
+Shiiiieeet
 
 Configuration
 -------------
